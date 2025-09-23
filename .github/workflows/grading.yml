@@ -14,7 +14,8 @@ jobs:
 
       - name: Test Case 1: Correct password on first try
         run: |
-          if echo "2025" | ./main | grep -q "Log-In success!"; then
+          echo "2025" | ./main | grep -q "Log-In success!"
+          if [ $? -eq 0 ]; then
             echo "Test 1 Passed"
           else
             echo "Test 1 Failed"
@@ -23,7 +24,8 @@ jobs:
 
       - name: Test Case 2: Correct password on third try
         run: |
-          if echo -e "1111\n2222\n2025" | ./main | grep -q "Log-In success!"; then
+          echo -e "1111\n2222\n2025" | ./main | grep -q "Log-In success!"
+          if [ $? -eq 0 ]; then
             echo "Test 2 Passed"
           else
             echo "Test 2 Failed"
@@ -32,7 +34,8 @@ jobs:
 
       - name: Test Case 3: Failed all 5 tries
         run: |
-          if echo -e "1\n2\n3\n4\n5" | ./main | grep -q "Log-In Failed"; then
+          echo -e "1\n2\n3\n4\n5" | ./main | grep -q "Log-In Failed"
+          if [ $? -eq 0 ]; then
             echo "Test 3 Passed"
           else
             echo "Test 3 Failed"
