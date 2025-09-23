@@ -1,0 +1,60 @@
+name: Grading
+
+on: [push, pull_request]
+
+jobs:
+  build_and_grade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Compile the code
+        run: gcc -o main main.c
+
+      - name: Test Case 1: Correct password on first try
+        id: test1
+        run: |
+          echo "2025" | ./main > output1.txt
+          expected_output="비밀번호를 입력하세요. (최대 5회 시도)
+시도 1: Log-In success!"
+          if [[ "$(cat output1.txt)" == "$expected_output" ]]; then
+            echo "Test 1 Passed"
+          else
+            echo "Test 1 Failed"
+            exit 1
+          fi
+
+      - name: Test Case 2: Correct password on third try
+        id: test2
+        run: |
+          echo -e "1111\n2222\n2025" | ./main > output2.txt
+          expected_output="비밀번호를 입력하세요. (최대 5회 시도)
+시도 1: Wrong password. Try again.
+시도 2: Wrong password. Try again.
+시도 3: Log-In success!"
+          if [[ "$(cat output2.txt)" == "$expected_output" ]]; then
+            echo "Test 2 Passed"
+          else
+            echo "Test 2 Failed"
+            exit 1
+          fi
+
+      - name: Test Case 3: Failed all 5 tries
+        id: test3
+        run: |
+          echo -e "1\n2\n3\n4\n5" | ./main > output3.txt
+          expected_output="비밀번호를 입력하세요. (최대 5회 시도)
+시도 1: Wrong password. Try again.
+시도 2: Wrong password. Try again.
+시도 3: Wrong password. Try again.
+시도 4: Wrong password. Try again.
+시도 5: Wrong password. Try again.
+Log-In Failed"
+          if [[ "$(cat output3.txt)" == "$expected_output" ]]; then
+            echo "Test 3 Passed"
+          else
+            echo "Test 3 Failed"
+            exit 1
+          fi
+          
