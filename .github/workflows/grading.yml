@@ -13,6 +13,7 @@ jobs:
         run: gcc -o main main.c
 
       - name: Test Case 1: Correct password on first try
+        id: test1
         run: |
           echo "2025" | ./main | grep -q "Log-In success!"
           if [ $? -eq 0 ]; then
@@ -23,6 +24,7 @@ jobs:
           fi
 
       - name: Test Case 2: Correct password on third try
+        id: test2
         run: |
           echo -e "1111\n2222\n2025" | ./main | grep -q "Log-In success!"
           if [ $? -eq 0 ]; then
@@ -33,6 +35,7 @@ jobs:
           fi
 
       - name: Test Case 3: Failed all 5 tries
+        id: test3
         run: |
           echo -e "1\n2\n3\n4\n5" | ./main | grep -q "Log-In Failed"
           if [ $? -eq 0 ]; then
