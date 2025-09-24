@@ -1,43 +1,58 @@
 name: Grading
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
-  build_and_grade:
+  grade-assignment:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Compile the code
-        run: gcc -o main main.c
+        run: gcc main.c -o main
 
-      - name: Test Case 1: Correct password on first try
+      - name: Grade Test Case (N=4)
+        id: code_test
         run: |
-          echo "2025" | ./main | grep -q "Log-In success!"
-          if [ $? -eq 0 ]; then
-            echo "Test 1 Passed"
+          echo "4" | ./main > output1.txt
+          cat output1.txt
+          expected_output=$(printf "1부터 10까지의 정수를 입력하세요: *******\n *****\n  ***\n   *\n")
+          if diff -q output1.txt <(echo -e "$expected_output"); then
+            echo "::set-output name=result::success"
+            echo "Test Passed!"
           else
-            echo "Test 1 Failed"
-            exit 1
+            echo "::set-output name=result::fail"
+            echo "Test Failed. Output mismatch."
           fi
+          echo "Test result: ${{ steps.code_test.outputs.result }}"
 
-      - name: Test Case 2: Correct password on third try
+      - name: Check Comments
+        id: comment_check
         run: |
-          echo -e "1111\n2222\n2025" | ./main | grep -q "Log-In success!"
-          if [ $? -eq 0 ]; then
-            echo "Test 2 Passed"
+          comment_count=$(grep -c -E "//|/\*" main.c)
+          if [ "$comment_count" -lt 4 ]; then
+            echo "::set-output name=result::fail"
+            echo "::warning::Warning: Number of comments is less than 4."
           else
-            echo "Test 2 Failed"
-            exit 1
+            echo "::set-output name=result::success"
           fi
+          echo "Comment check result: ${{ steps.comment_check.outputs.result }}"
 
-      - name: Test Case 3: Failed all 5 tries
+      - name: Final Result and Exit
         run: |
-          echo -e "1\n2\n3\n4\n5" | ./main | grep -q "Log-In Failed"
-          if [ $? -eq 0 ]; then
-            echo "Test 3 Passed"
+          code_result="${{ steps.code_test.outputs.result }}"
+          comment_result="${{ steps.comment_check.outputs.result }}"
+
+          if [ "$code_result" == "success" ] && [ "$comment_result" == "success" ]; then
+            echo "::notice::✔ Success"
+          elif [ "$code_result" == "success" ] && [ "$comment_result" == "fail" ]; then
+            echo "::error::❌ Fail - 1 (동작 정상, 주석 부족)"
+            exit 1
+          elif [ "$code_result" == "fail" ] && [ "$comment_result" == "success" ]; then
+            echo "::error::❌ Fail - 2 (동작 실패, 주석 정상)"
+            exit 1
           else
-            echo "Test 3 Failed"
+            echo "::error::❌ Fail - 3 (동작 실패, 주석 부족)"
             exit 1
           fi
